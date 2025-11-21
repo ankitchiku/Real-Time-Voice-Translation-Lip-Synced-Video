@@ -1,0 +1,44 @@
+# k8s/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: upload-service
+  namespace: video-pipeline
+spec:
+  selector:
+    app: upload
+  ports:
+  - protocol: TCP
+    port: 8001
+    targetPort: 8001
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: processing-service
+  namespace: video-pipeline
+spec:
+  selector:
+    app: processing
+  ports:
+  - protocol: TCP
+    port: 8002
+    targetPort: 8002
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: media-service
+  namespace: video-pipeline
+spec:
+  selector:
+    app: media
+  ports:
+  - protocol: TCP
+    port: 8003
+    targetPort: 8003
+  type: ClusterIP

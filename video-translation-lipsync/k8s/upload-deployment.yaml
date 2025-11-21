@@ -1,0 +1,41 @@
+# k8s/upload-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upload-service
+  namespace: video-pipeline
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: upload
+  template:
+    metadata:
+      labels:
+        app: upload
+    spec:
+      containers:
+      - name: upload
+        image: video-pipeline/upload:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8001
+        env:
+        - name: UPLOAD_DIR
+          value: "/app/uploads"
+        - name: MAX_FILE_SIZE
+          value: "104857600"
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: uploads-pvc

@@ -1,0 +1,12 @@
+# services/processing/requirements.txt
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+openai-whisper==20231117
+torch==2.1.0
+torchaudio==2.1.0
+transformers==4.35.2
+TTS==0.22.0
+opencv-python==4.8.1.78
+scipy==1.11.4
+pydub==0.25.1
+ffmpeg-python==0.2.0" | Set-Content services\processing\requirements.txt

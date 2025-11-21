@@ -1,0 +1,4 @@
+# services/media/requirements.txt
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+aiofiles==23.2.1" | Set-Content services\media\requirements.txt

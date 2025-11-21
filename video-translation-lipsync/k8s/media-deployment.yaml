@@ -1,0 +1,39 @@
+# k8s/media-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-service
+  namespace: video-pipeline
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: media
+  template:
+    metadata:
+      labels:
+        app: media
+    spec:
+      containers:
+      - name: media
+        image: video-pipeline/media:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8003
+        env:
+        - name: MEDIA_DIR
+          value: "/app/outputs"
+        volumeMounts:
+        - name: outputs
+          mountPath: /app/outputs
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: outputs
+        persistentVolumeClaim:
+          claimName: outputs-pvc

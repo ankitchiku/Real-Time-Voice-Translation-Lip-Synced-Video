@@ -1,0 +1,57 @@
+# k8s/processing-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: processing-service
+  namespace: video-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: processing
+  template:
+    metadata:
+      labels:
+        app: processing
+    spec:
+      containers:
+      - name: processing
+        image: video-pipeline/processing:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8002
+        env:
+        - name: OUTPUT_DIR
+          value: "/app/outputs"
+        - name: UPLOAD_DIR
+          value: "/app/uploads"
+        - name: MODEL_DIR
+          value: "/app/models"
+        - name: WHISPER_MODEL
+          value: "base"
+        - name: USE_GPU
+          value: "false"
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+        - name: outputs
+          mountPath: /app/outputs
+        - name: models
+          mountPath: /app/models
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: uploads-pvc
+      - name: outputs
+        persistentVolumeClaim:
+          claimName: outputs-pvc
+      - name: models
+        persistentVolumeClaim:
+          claimName: models-pvc
