@@ -238,6 +238,44 @@ video-translation-lipsync/
 - `WHISPER_MODEL`: Whisper model size (default: `base`, options: `tiny`, `base`, `small`, `medium`, `large`)
 - `USE_GPU`: Enable GPU acceleration (default: `false`)
 
+## Notes & Important Implementation Details
+
+- Translation model coverage: The pipeline will attempt to load a Helsinki-NLP Marian model for `en -> {target}` when available (for many common languages). If a language-specific Helsinki model isn't available, the pipeline falls back to a multilingual seq2seq model (`facebook/m2m100_418M`) which supports many languages — however this model is larger and may need more memory.
+
+- Tokenization and chunking: Text is chunked by tokenizer tokens (max 512 tokens) rather than naive sentence splits to avoid silent truncation that would change translation output.
+
+- Audio length alignment: The generated TTS audio is adjusted (trimmed/padded or resampled) to approximately match the original audio duration before lip-sync. This improves lip-sync quality, but perfect timing may still require manual tuning for extreme duration mismatches.
+
+- Speaker cloning: You can provide a speaker reference audio by setting `MODEL_SPEAKER_REF` environment variable to a local WAV file path. The pipeline will try to use it with Coqui TTS (when supported by the chosen TTS model) to approximate the original speaker's voice. This is optional and may not be perfect for all voices.
+
+- Wav2Lip installation: Wav2Lip is not auto-installed in the container due to its GitHub repo size and checkpoint licensing. To enable full lip-sync:
+  1. Clone Wav2Lip into the models folder: `git clone https://github.com/Rudrabha/Wav2Lip.git models/Wav2Lip`
+  2. Download the checkpoint and place it at: `models/Wav2Lip/checkpoints/wav2lip_gan.pth`
+  3. Ensure the `models/Wav2Lip/inference.py` file exists (the pipeline uses it when present).
+
+If Wav2Lip isn't available the pipeline will fallback to combining the generated audio with the original video (no lip movement correction).
+
+### Optional: Build processing image with Wav2Lip included
+
+If you want the Docker image to clone the Wav2Lip repository and attempt to download a checkpoint at build time, you can pass build-time arguments. Be aware this will increase image size and may take a long time.
+
+Example (PowerShell):
+
+```powershell
+# Replace <checkpoint_url> with a hosted URL to the wav2lip_gan.pth file if you have one.
+docker build `
+  --build-arg INSTALL_WAV2LIP=true `
+  --build-arg WAV2LIP_CHECKPOINT_URL="<checkpoint_url>" `
+  -t video-pipeline/processing:with-wav2lip `
+  -f services/processing/Dockerfile .
+```
+
+If you do not have a public checkpoint URL, you can clone Wav2Lip into your local `models/` directory and mount it as a volume into the container at runtime instead. This avoids embedding the checkpoint into the image.
+
+Warning:
+- The Wav2Lip repository and checkpoint are large. Building with `INSTALL_WAV2LIP=true` will significantly increase image size.
+- Check checkpoint licensing and distribution restrictions before including it in images or a public registry.
+
 **Media Service:**
 - `MEDIA_DIR`: Media files directory (default: `/app/outputs`)
 
